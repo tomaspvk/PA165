@@ -16,8 +16,10 @@ import org.junit.Rule;
 
 import cz.fi.muni.carshop.entities.Car;
 import cz.fi.muni.carshop.enums.CarTypes;
+import cz.fi.muni.carshop.exceptions.RequestedCarNotFoundException;
 import cz.fi.muni.carshop.services.CarShopStorageService;
 import cz.fi.muni.carshop.services.CarShopStorageServiceImpl;
+import static org.junit.Assert.assertFalse;
 
 public class CarShopStorageServiceTest {
 
@@ -62,6 +64,23 @@ public class CarShopStorageServiceTest {
 		assertThat(service.getCheaperCarsOfSameTypeAndYear(new Car(Color.BLACK, CarTypes.AUDI, 2016, 900000)),
 				hasSize(3));
 
+	}
+        
+        @Test()
+	public void sellNonexistingCar() throws RequestedCarNotFoundException {
+                thrown.reportMissingExceptionWithMessage("Requested car does not exist").expect(RequestedCarNotFoundException.class);
+                
+		service.sellCar(new Car(Color.BLACK, CarTypes.AUDI, 2016, 100));
+	}
+        
+        @Test
+	public void sellExistingCar() throws RequestedCarNotFoundException {
+            service.addCarToStorage(new Car(Color.BLACK, CarTypes.AUDI, 2016, 899000));
+            Map<CarTypes, List<Car>> allCars = CarShopStorage.getInstancce().getCars();
+            Car createdCar = allCars.get(CarTypes.AUDI).iterator().next();
+            
+            service.sellCar(createdCar);
+            assertFalse(service.isCarAvailable(Color.BLACK, CarTypes.AUDI).isPresent());
 	}
 
 }
